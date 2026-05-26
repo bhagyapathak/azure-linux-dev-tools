@@ -290,6 +290,13 @@ type ComponentConfig struct {
 	// all packages produced by this component. Overridden by package-group and per-package settings
 	// for binary and debuginfo channels.
 	Publish ComponentPublishConfig `toml:"publish,omitempty" json:"publish,omitempty" table:"-" jsonschema:"title=Publish settings,description=Component-level publish channel settings" fingerprint:"-"`
+
+	// TestLabels are framework-label names (declared in
+	// base/tests/framework-labels.toml) selected for this component's
+	// dynamic test pass. The resolver applies label-level capability
+	// gating and framework enablement; this field is metadata only at
+	// the project-config layer.
+	TestLabels []string `toml:"test_labels,omitempty" json:"testLabels,omitempty" table:"-" fingerprint:"-" jsonschema:"title=Test labels,description=Framework-label names from framework-labels.toml selected for this component"`
 }
 
 // AllowedSourceFilesHashTypes defines the set of hash types that are supported

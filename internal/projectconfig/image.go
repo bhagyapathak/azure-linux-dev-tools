@@ -34,6 +34,13 @@ type ImageConfig struct {
 
 	// Publish holds the publish settings for this image.
 	Publish ImagePublishConfig `toml:"publish,omitempty" json:"publish,omitempty" jsonschema:"title=Publish settings,description=Publishing settings for this image"`
+
+	// TestWorkflows maps a validation tier name (e.g. "pr_validation",
+	// "nightly_validation", "release_validation") to a list of test-label
+	// names defined in base/tests/framework-labels.toml. The resolver
+	// (azldev image labels) consumes this mapping to produce concrete
+	// framework filters for the runners.
+	TestWorkflows map[string][]string `toml:"test-workflows,omitempty" json:"testWorkflows,omitempty" jsonschema:"title=Test workflows,description=Per-tier list of framework-label names selected for this image"`
 }
 
 // ImagePublishConfig holds publish settings for an image. Unlike packages (which target a
