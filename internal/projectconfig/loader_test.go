@@ -1388,6 +1388,44 @@ rpm-channel = "new-channel"
 		"rpm-channel should take precedence over the deprecated channel field")
 }
 
+func TestLoadAndResolveProjectConfig_PytestWorkingDirPreservedAsAuthored(t *testing.T) {
+	// Define the pytest test in an included file under a *different* directory
+	// than the root config, so the assertions actually exercise per-config-file
+	// provenance: a relative 'working-dir' must resolve against the included
+	// file's directory, not the root config's directory.
+	const rootContents = `
+includes = ["sub/included.toml"]
+`
+
+	const includedContents = `
+[tests.smoke]
+type = "pytest"
+
+[tests.smoke.pytest]
+working-dir = "tests"
+test-paths = ["cases/"]
+`
+
+	includedPath := "/project/sub/included.toml"
+
+	ctx := testctx.NewCtx()
+	require.NoError(t, fileutils.WriteFile(ctx.FS(), testConfigPath, []byte(rootContents), fileperms.PrivateFile))
+	require.NoError(t, fileutils.MkdirAll(ctx.FS(), filepath.Dir(includedPath)))
+	require.NoError(t, fileutils.WriteFile(ctx.FS(), includedPath, []byte(includedContents), fileperms.PrivateFile))
+
+	config, err := loadAndResolveProjectConfig(ctx.FS(), loadOptions{}, testConfigPath)
+	require.NoError(t, err)
+
+	require.Contains(t, config.Tests, "smoke")
+	// working-dir must be preserved exactly as authored, not rewritten to an
+	// absolute path at load/dump time.
+	assert.Equal(t, "tests", config.Tests["smoke"].Pytest["working-dir"])
+	// ...and it resolves against the *included* file's directory at execution
+	// time (via recorded provenance), not the root config's directory. This
+	// fails if mergeTests stops recording the included file's directory.
+	assert.Equal(t, "/project/sub/tests", config.Tests["smoke"].PytestWorkingDir())
+}
+
 func TestLoadAndResolveProjectConfig_CircularInclude(t *testing.T) {
 	t.Run("direct self-include", func(t *testing.T) {
 		ctx := testctx.NewCtx()
