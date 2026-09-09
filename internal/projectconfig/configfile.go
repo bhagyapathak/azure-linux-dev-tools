@@ -63,9 +63,6 @@ type ConfigFile struct {
 	// to be applied to sets of binary packages.
 	PackageGroups map[string]PackageGroupConfig `toml:"package-groups,omitempty" validate:"dive" jsonschema:"title=Package groups,description=Definitions of package groups for shared binary package configuration"`
 
-	// Definitions of test suites.
-	TestSuites map[string]TestSuiteConfig `toml:"test-suites,omitempty" validate:"dive" jsonschema:"title=Test Suites,description=Definitions of test suites for this project"`
-
 	// Definitions of individual tests (new schema, [tests.X]).
 	Tests map[string]TestDefinition `toml:"tests,omitempty" validate:"dive" jsonschema:"title=Tests,description=Definitions of individual tests"`
 
@@ -109,10 +106,6 @@ func (f ConfigFile) Validate() error {
 	}
 
 	if err := validateComponentConfigs(f.Components, false); err != nil {
-		return err
-	}
-
-	if err := validateTestSuites(f.TestSuites); err != nil {
 		return err
 	}
 
@@ -186,25 +179,6 @@ func validateComponentConfigs(
 					"snapshots should be set on the distro or group default-component-config, "+
 					"or use 'upstream-commit' to pin a specific commit",
 				componentName)
-		}
-	}
-
-	return nil
-}
-
-func validateTestSuites(testSuites map[string]TestSuiteConfig) error {
-	for suiteName, suite := range testSuites {
-		// Suite names are used as path components (e.g., for the per-suite venv directory),
-		// so reject anything that could escape the intended directory or otherwise be unsafe
-		// across platforms.
-		if err := fileutils.ValidateFilename(suiteName); err != nil {
-			return fmt.Errorf("invalid test suite name %#q:\n%w", suiteName, err)
-		}
-
-		suite.Name = suiteName
-
-		if err := suite.Validate(); err != nil {
-			return fmt.Errorf("invalid test suite %#q:\n%w", suiteName, err)
 		}
 	}
 
