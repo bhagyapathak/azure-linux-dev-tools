@@ -1388,6 +1388,32 @@ rpm-channel = "new-channel"
 		"rpm-channel should take precedence over the deprecated channel field")
 }
 
+func TestLoadAndResolveProjectConfig_PytestWorkingDirPreservedAsAuthored(t *testing.T) {
+	const configContents = `
+[tests.smoke]
+type = "pytest"
+
+[tests.smoke.pytest]
+working-dir = "tests"
+test-paths = ["cases/"]
+`
+
+	ctx := testctx.NewCtx()
+	require.NoError(t, fileutils.WriteFile(ctx.FS(), testConfigPath, []byte(configContents), fileperms.PrivateFile))
+
+	config, err := loadAndResolveProjectConfig(ctx.FS(), false, testConfigPath)
+	require.NoError(t, err)
+
+	require.Contains(t, config.Tests, "smoke")
+	// working-dir must be preserved exactly as authored, not rewritten to an
+	// absolute path at load/dump time.
+	assert.Equal(t, "tests", config.Tests["smoke"].Pytest["working-dir"])
+	// ...but it resolves to an absolute path relative to the defining config
+	// file's directory at execution time (via recorded provenance), so relative
+	// paths in included files remain correct.
+	assert.Equal(t, "/project/tests", config.Tests["smoke"].PytestWorkingDir())
+}
+
 func TestLoadAndResolveProjectConfig_CircularInclude(t *testing.T) {
 	t.Run("direct self-include", func(t *testing.T) {
 		ctx := testctx.NewCtx()
