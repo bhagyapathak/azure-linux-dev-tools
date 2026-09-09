@@ -384,7 +384,7 @@ func mergeTests(resolvedCfg *ProjectConfig, loadedCfg *ConfigFile) error {
 			return fmt.Errorf("%w: test %#q", ErrDuplicateTests, testName)
 		}
 
-		resolvedCfg.Tests[testName] = testDef.WithAbsolutePaths(loadedCfg.dir)
+		resolvedCfg.Tests[testName] = testDef.WithConfigDir(loadedCfg.dir)
 	}
 
 	return nil

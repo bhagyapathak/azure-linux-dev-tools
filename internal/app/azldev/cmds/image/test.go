@@ -279,6 +279,10 @@ func testDefinitionToSuiteConfig(resolvedTest projectconfig.ResolvedTest) (*proj
 		return nil, fmt.Errorf("decode pytest config for test %#q:\n%w", resolvedTest.Name, err)
 	}
 
+	// The stored config keeps 'working-dir' as authored; resolve it relative to
+	// the defining config file's directory only here, for execution.
+	pytestConfig.WorkingDir = resolvedTest.Definition.PytestWorkingDir()
+
 	suiteConfig := &projectconfig.TestSuiteConfig{
 		Name:        resolvedTest.Name,
 		Description: resolvedTest.Definition.Description,
