@@ -1246,6 +1246,7 @@ func TestLoadAndResolveProjectConfig_ImageCapabilities_FipsEnabledAndCVM(t *test
 	const configContents = `
 [images.myimage]
 description = "Test image"
+architectures = ["x86_64"]
 
 [images.myimage.capabilities]
 machine-bootable = true
@@ -1266,6 +1267,22 @@ cvm = true
 		assert.Contains(t, caps.EnabledNames(), "fips-enabled")
 		assert.Contains(t, caps.EnabledNames(), "cvm")
 	}
+}
+
+func TestLoadAndResolveProjectConfig_ImageArchitectures(t *testing.T) {
+	const configContents = `
+[images.gen1]
+architectures = ["x86_64"]
+`
+
+	ctx := testctx.NewCtx()
+	require.NoError(t, fileutils.WriteFile(ctx.FS(), testConfigPath, []byte(configContents), fileperms.PrivateFile))
+
+	config, err := loadAndResolveProjectConfig(ctx.FS(), loadOptions{}, testConfigPath)
+	require.NoError(t, err)
+
+	gen1Image := config.Images["gen1"]
+	assert.Equal(t, []string{"x86_64"}, gen1Image.Architectures)
 }
 
 func TestLoadAndResolveProjectConfig_TestDefinitionMetricsEnabled(t *testing.T) {

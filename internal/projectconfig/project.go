@@ -6,6 +6,7 @@ package projectconfig
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -105,6 +106,10 @@ func (cfg *ProjectConfig) validate(withoutLockfile bool) error {
 	}
 
 	if err := validateImageCapabilities(cfg.Images); err != nil {
+		return err
+	}
+
+	if err := validateImageArchitectures(cfg.Images); err != nil {
 		return err
 	}
 
@@ -325,6 +330,49 @@ func validateImageCapabilities(images map[string]ImageConfig) error {
 				strings.Join(trueKinds, ", "),
 			)
 		}
+	}
+
+	return nil
+}
+
+func validateImageArchitectures(images map[string]ImageConfig) error {
+	for imageName, image := range images {
+		// Architectures is optional: an unset list means the image is
+		// unrestricted, so images.toml files predating this field remain valid.
+		if len(image.Architectures) == 0 {
+			continue
+		}
+
+		if err := validateArchitectureList(
+			fmt.Sprintf("images.%s.architectures", imageName),
+			image.Architectures,
+		); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func validateArchitectureList(field string, architectures []string) error {
+	seen := make(map[string]struct{}, len(architectures))
+	supported := SupportedImageArchitectures()
+
+	for _, arch := range architectures {
+		if !slices.Contains(supported, arch) {
+			return fmt.Errorf(
+				"%s contains unsupported architecture %#q; supported architectures: %s",
+				field,
+				arch,
+				strings.Join(supported, ", "),
+			)
+		}
+
+		if _, duplicate := seen[arch]; duplicate {
+			return fmt.Errorf("%s contains duplicate architecture %#q", field, arch)
+		}
+
+		seen[arch] = struct{}{}
 	}
 
 	return nil
