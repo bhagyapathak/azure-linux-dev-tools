@@ -32,10 +32,12 @@ under one or more URL prefixes.
   -C, --project string            path to Azure Linux project
   -q, --quiet                     only enable minimal output
   -v, --verbose                   enable verbose output
+      --without-lockfile          preview: track resolved upstream commits in generated config instead of lock files
 ```
 
 ### SEE ALSO
 
 * [azldev](azldev.md)	 - 🐧 Azure Linux Dev Tool
+* [azldev repo compare](azldev_repo_compare.md)	 - Compare package inventories in two RPM repo sets
 * [azldev repo query](azldev_repo_query.md)	 - Run dnf against auto-discovered RPM repos
 
