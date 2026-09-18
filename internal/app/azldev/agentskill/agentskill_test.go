@@ -151,6 +151,15 @@ func TestComponentTomlSkillDocumentsRPMDevBumpspecPreview(t *testing.T) {
 	assert.Contains(t, doc, "no bumpspec runtime discovery occurs")
 }
 
+func TestImageSkillDocumentsSKUGroupGuidance(t *testing.T) {
+	doc, err := agentskill.SkillDocument("azldev-image", testParams())
+	require.NoError(t, err)
+
+	assert.Contains(t, doc, "sku-groups = ")
+	assert.Contains(t, doc, "[sku-groups.<name>]")
+	assert.Contains(t, doc, "multi-SKU performance tests")
+}
+
 func TestSkillFrontmatterInvariants(t *testing.T) {
 	layout := agentskill.DefaultLayout()
 

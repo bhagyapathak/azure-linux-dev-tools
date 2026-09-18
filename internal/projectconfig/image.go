@@ -24,6 +24,38 @@ func SupportedImageArchitectures() []string {
 	return []string{ImageArchitectureX86_64, ImageArchitectureAarch64}
 }
 
+// SKUArchForImageArchitecture maps an image architecture name (x86_64/aarch64)
+// to its SKU-group architecture token (amd64/arm64). It is one half of the
+// single source of truth bridging the two architecture naming conventions in the
+// config: image builders use the kernel uname names while SKU groups use the
+// Azure/Go GOARCH tokens. Keep it in sync with ImageArchitectureForSKUArch,
+// SupportedImageArchitectures, and the SKUArch* constants. found is false when
+// imageArch is not a recognized image architecture.
+func SKUArchForImageArchitecture(imageArch string) (skuArch string, found bool) {
+	switch imageArch {
+	case ImageArchitectureX86_64:
+		return SKUArchAMD64, true
+	case ImageArchitectureAarch64:
+		return SKUArchARM64, true
+	default:
+		return "", false
+	}
+}
+
+// ImageArchitectureForSKUArch maps a SKU-group architecture token (amd64/arm64)
+// to its image architecture name (x86_64/aarch64). found is false when skuArch
+// is not a recognized SKU architecture.
+func ImageArchitectureForSKUArch(skuArch string) (imageArch string, found bool) {
+	switch skuArch {
+	case SKUArchAMD64:
+		return ImageArchitectureX86_64, true
+	case SKUArchARM64:
+		return ImageArchitectureAarch64, true
+	default:
+		return "", false
+	}
+}
+
 // Defines an image.
 type ImageConfig struct {
 	// The image's name; not actually present in serialized TOML files.
